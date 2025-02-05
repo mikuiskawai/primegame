@@ -174,7 +174,9 @@
             let selected = [];
             for (let y = Math.floor(y1); y <= Math.floor(y2); y++) {
                 for (let x = Math.floor(x1); x <= Math.floor(x2); x++) {
-                    selected.push({ x, y, value: apples[y][x] });
+                    if(apples[y][x]!=0){
+                        selected.push({ x, y, value: apples[y][x] });
+                    }
                 }
             }
             return selected;
