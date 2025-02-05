@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prime Game</title>
+    <style>
+        body{
+            background-color: black;
+            font-family: "Jua", sans-serif;
+        }
+        p {
+            color: white;
+            font-family: "Jua", sans-serif;
+            font-size: 20px;
+        }
+        #intro {
+            font-size: 60px;
+            margin-top: 10px;
+            font-family: "Jua", sans-serif;
+        }
+        #explanation {
+            font-size: 30px;
+            margin-top: -40px;
+            font-family: "Jua", sans-serif;
+        }
+        canvas {
+            border: 2px solid black;
+            display: block;
+            margin: auto;
+        }
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+        }
+        #logo {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            cursor: pointer;
+        }
+        #startButton {
+            padding: 10px 20px;
+            font-size: 20px;
+            cursor: pointer;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            width: 200px;
+            height: 70px;
+            transform: translate(-50%, -50%);
+            background-color: khaki;
+            border-radius: 20px;
+            font-family: "Jua", sans-serif;
+            font-size: 40px;
+            color: white;
+            text-shadow: -1px 0px rgb(0, 0, 0), 0px 1px rgb(0, 0, 0), 1px 0px rgb(0, 0, 0), 0px -1px rgb(0, 0, 0);
+        }
+        #lastscore {
+            font-size: 100px;
+            color: khaki;
+            margin-top: -30px;
+            font-family: "Jua", sans-serif;
+        }
+        .jua-regular {
+            font-family: "Jua", serif;
+            font-weight: 400;
+            font-style: normal;
+        }
+    </style>
+</head>
+<body>
+    <p id="intro">소수 게임</p>
+    <button id="startButton">게임 시작</button>
+    <p id="explanation">2개 이상의 수를 드래그해 20 이하의 소수를 만드세요!</p>
+    <div id="logo">
+        <img src="./소수교 로고.png" alt="logo" width="60" height="60" onclick="location.reload()">
+    </div>
+    <canvas id="gameCanvas" style="display: none;"></canvas>
+    <p id="score" style="display: none;">점수: 0</p>
+    <p id="timer" style="display: none;">남은 시간: 120초</p>
+    <p id="lastscore" style="display: none;">0점</p>
+
+    <script>
+        function isPrime(num) {
+            if (num <= 1) return false;
+            if (num >= 20) return false;
+            for (let i = 2; i <= Math.sqrt(num); i++) {
+                if (num % i === 0) return false;
+            }
+            return true;
+        }
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const startButton = document.getElementById("startButton");
+        const scoreDisplay = document.getElementById("score");
+        const lastscoreDisplay = document.getElementById("lastscore"); // 전 게임 점수 표시
+        const timerDisplay = document.getElementById("timer");
+
+        canvas.width = 680;
+        canvas.height = 400;
+
+        const cols = 17, rows = 10, cellSize = 40;
+        let apples = [], score = 0, timeLeft = 120, gameRunning = false;
+        let dragging = false, startX = 0, startY = 0, endX = 0, endY = 0;
+
+        function initGame() {
+            apples = Array.from({ length: rows }, () =>
+                Array.from({ length: cols }, () => Math.floor(Math.random() * 9) + 1)
+            );
+            score = 0;
+            timeLeft = 120;
+            updateUI();
+            gameRunning = true;
+            gameLoop();
+        }
+
+        function updateUI() {
+            scoreDisplay.textContent = `점수: ${score}`;
+            timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
+            if(timeLeft === 0) {
+                gameRunning = false;
+                lastscoreDisplay.style.display = "block";
+                lastscoreDisplay.textContent = `${score}점`;
+                startButton.style.display = "block";
+                canvas.style.display = "none";
+                scoreDisplay.style.display = "none";
+                timerDisplay.style.display = "none";
+            }
+        }
+
+        function drawGrid() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = "black";
+            ctx.lineWidth = 0;
+
+            for (let y = 0; y < rows; y++) {
+                for (let x = 0; x < cols; x++) {
+                    ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize);
+                    if (apples[y][x] > 0) {
+                        ctx.fillStyle = "khaki";
+                        ctx.fillRect(x * cellSize + 2, y * cellSize + 2, cellSize - 4, cellSize - 4);
+                        ctx.fillStyle = "black";
+                        ctx.font = "20px Arial";
+                        ctx.fillText(apples[y][x], x * cellSize + 15, y * cellSize + 25);
+                    }
+                }
+            }
+        }
+
+        function gameLoop() {
+            if (gameRunning) {
+                drawGrid();
+                if (dragging) drawSelectionBox();
+                requestAnimationFrame(gameLoop);
+            }
+        }
+
+        function drawSelectionBox() {
+            ctx.strokeStyle = "red";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(startX, startY, endX - startX, endY - startY);
+        }
+
+        function getSelectedApples() {
+            let x1 = Math.min(startX, endX) / cellSize;
+            let y1 = Math.min(startY, endY) / cellSize;
+            let x2 = Math.max(startX, endX) / cellSize;
+            let y2 = Math.max(startY, endY) / cellSize;
+
+            let selected = [];
+            for (let y = Math.floor(y1); y <= Math.floor(y2); y++) {
+                for (let x = Math.floor(x1); x <= Math.floor(x2); x++) {
+                    selected.push({ x, y, value: apples[y][x] });
+                }
+            }
+            return selected;
+        }
+
+        function checkAndRemove() {
+            let selected = getSelectedApples();
+            let sum = selected.reduce((acc, apple) => acc + apple.value, 0);
+
+            if (selected.length >= 2) {
+                let sum = selected.reduce((acc, apple) => acc + apple.value, 0);
+                if (isPrime(sum)) {
+                    selected.forEach(({ x, y }) => (apples[y][x] = 0));
+                    score += selected.length;
+                    updateUI();
+                }
+            }
+        }
+
+        canvas.addEventListener("mousedown", (e) => {
+            if (!gameRunning) return;
+            dragging = true;
+            startX = endX = e.offsetX;
+            startY = endY = e.offsetY;
+        });
+
+        canvas.addEventListener("mousemove", (e) => {
+            if (dragging) {
+                endX = e.offsetX;
+                endY = e.offsetY;
+            }
+        });
+
+        canvas.addEventListener("mouseup", () => {
+            if (dragging) {
+                checkAndRemove();
+            }
+            dragging = false;
+        });
+
+        setInterval(() => {
+            if (gameRunning && timeLeft > 0) {
+                timeLeft--;
+                updateUI();
+            }
+        }, 1000);
+
+        startButton.addEventListener("click", () => {
+            lastscoreDisplay.style.display = "none";
+            startButton.style.display = "none";
+            canvas.style.display = "block";
+            scoreDisplay.style.display = "block";
+            timerDisplay.style.display = "block";
+            initGame();
+        });
+    </script>
+</body>
+</html>
