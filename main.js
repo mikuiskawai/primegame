@@ -107,6 +107,51 @@ function onMouseUp(event) {
     }
 }
 
+canvas.addEventListener("touchstart", onTouchStart);
+canvas.addEventListener("touchend", onTouchEnd);
+
+let touchStartX, touchStartY;
+
+function onTouchStart(event) {
+    touchStartX = event.touches[0].clientX;
+    touchStartY = event.touches[0].clientY;
+}
+
+function onTouchEnd(event) {
+    let touchEndX = event.changedTouches[0].clientX;
+    let touchEndY = event.changedTouches[0].clientY;
+    
+    let dx = touchEndX - touchStartX;
+    let dy = touchEndY - touchStartY;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0) move("right");
+        else move("left");
+    } else {
+        if (dy > 0) move("down");
+        else move("up");
+    }
+}
+
+document.addEventListener("keydown", onKeyDown);
+
+function onKeyDown(event) {
+    switch (event.key) {
+        case "ArrowLeft":
+            move("left");
+            break;
+        case "ArrowRight":
+            move("right");
+            break;
+        case "ArrowUp":
+            move("up");
+            break;
+        case "ArrowDown":
+            move("down");
+            break;
+    }
+}
+
 function checkGameOver() {
     for (let r = 0; r < size; r++) {
         for (let c = 0; c < size; c++) {
