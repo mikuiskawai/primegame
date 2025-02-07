@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2357</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 90vh;
+            background-color: #000000;
+        }
+        canvas {
+            background: #000000;
+        }
+        #logo {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            cursor: pointer;
+        }
+        p {
+            color: white;
+            font-family: "Jua", sans-serif;
+            font-size: 20px;
+        }
+        #intro {
+            font-size: 60px;
+            top: -60px;
+            margin-left: -46px;
+            font-family: "Jua", sans-serif;
+            position: fixed;
+        }
+    </style>
+</head>
+<body>
+    <div id="intro">
+        <p id="intro">2357</p>
+    </div>
+    <div id="logo">
+        <img src="./소수교 로고.png" alt="logo" width="60" height="60" onclick="location.reload()">
+    </div>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <script src="main.js"></script>
+</body>
+</html>
