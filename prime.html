@@ -1,47 +1,55 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Prime Game</title>
     <style>
-        body{
+        body {
             background-color: black;
             font-family: "Jua", sans-serif;
         }
+
         p {
             color: white;
             font-family: "Jua", sans-serif;
             font-size: 20px;
         }
+
         #intro {
             font-size: 60px;
             margin-top: 10px;
             font-family: "Jua", sans-serif;
         }
+
         #explanation {
             font-size: 30px;
             margin-top: -40px;
             font-family: "Jua", sans-serif;
         }
+
         canvas {
             border: 2px solid black;
             display: block;
             margin: auto;
         }
+
         body {
             text-align: center;
             font-family: Arial, sans-serif;
         }
+
         #logo {
             position: fixed;
             top: 10px;
             left: 10px;
             cursor: pointer;
         }
+
         #startButton {
             padding: 10px 20px;
             font-size: 20px;
@@ -59,12 +67,14 @@
             color: white;
             text-shadow: -1px 0px rgb(0, 0, 0), 0px 1px rgb(0, 0, 0), 1px 0px rgb(0, 0, 0), 0px -1px rgb(0, 0, 0);
         }
+
         #lastscore {
             font-size: 100px;
             color: khaki;
             margin-top: -30px;
             font-family: "Jua", sans-serif;
         }
+
         .jua-regular {
             font-family: "Jua", serif;
             font-weight: 400;
@@ -72,6 +82,7 @@
         }
     </style>
 </head>
+
 <body>
     <p id="intro">소수 게임</p>
     <button id="startButton">게임 시작</button>
@@ -121,7 +132,7 @@
         function updateUI() {
             scoreDisplay.textContent = `점수: ${score}`;
             timerDisplay.textContent = `남은 시간: ${timeLeft}초`;
-            if(timeLeft === 0) {
+            if (timeLeft === 0) {
                 gameRunning = false;
                 lastscoreDisplay.style.display = "block";
                 lastscoreDisplay.textContent = `${score}점`;
@@ -174,7 +185,7 @@
             let selected = [];
             for (let y = Math.floor(y1); y <= Math.floor(y2); y++) {
                 for (let x = Math.floor(x1); x <= Math.floor(x2); x++) {
-                    if(apples[y][x]!=0){
+                    if (apples[y][x] != 0) {
                         selected.push({ x, y, value: apples[y][x] });
                     }
                 }
@@ -195,7 +206,56 @@
                 }
             }
         }
+        function getTouchPosition(evt) {
+            const rect = canvas.getBoundingClientRect();
+            return {
+                x: evt.touches[0].clientX - rect.left,
+                y: evt.touches[0].clientY - rect.top
+            };
+        }
+        function startDrag(x, y) {
+            dragging = true;
+            startX = endX = x;
+            startY = endY = y;
+        }
 
+        function moveDrag(x, y) {
+            if (dragging) {
+                endX = x;
+                endY = y;
+            }
+        }
+
+        function endDrag() {
+            if (dragging) {
+                checkAndRemove();
+            }
+            dragging = false;
+        }
+        canvas.addEventListener("touchstart", (e) => {
+            e.preventDefault();
+            let pos = getTouchPosition(e);
+            startDrag(pos.x, pos.y);
+        });
+
+        canvas.addEventListener("touchmove", (e) => {
+            e.preventDefault();
+            let pos = getTouchPosition(e);
+            moveDrag(pos.x, pos.y);
+        });
+
+        canvas.addEventListener("touchend", endDrag);
+        canvas.addEventListener("touchstart", (e) => {
+            e.preventDefault();  // 화면 확대/스크롤 방지
+            let pos = getTouchPosition(e);
+            startDrag(pos.x, pos.y);
+        });
+
+        canvas.addEventListener("touchmove", (e) => {
+            e.preventDefault();  // 터치 중 스크롤 방지
+            let pos = getTouchPosition(e);
+            moveDrag(pos.x, pos.y);
+        });
         canvas.addEventListener("mousedown", (e) => {
             if (!gameRunning) return;
             dragging = true;
@@ -234,4 +294,5 @@
         });
     </script>
 </body>
+
 </html>
