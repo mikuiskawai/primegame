@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>소수 지뢰찾기</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background-color: black;
+            color:white;
+            font-family: "Jua", sans-serif;
+        }
+
+        canvas {
+            background: #aad751;
+            cursor: pointer;
+        }
+
+        #logo {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>소수 지뢰찾기</h1>
+    <div id="logo">
+        <img src="./소수교 로고.png" alt="logo" width="60" height="60" onclick="location.reload()">
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        const rows = 14, cols = 18, mines = 36;
+        const cellSize = 40;
+        canvas.width = cols * cellSize;
+        canvas.height = rows * cellSize;
+
+        let grid,minegrid, revealed, flagged, totalRevealed;
+        const primes = [2, 3, 5, 7];
+
+        function initGame() {
+            grid = Array.from({ length: rows }, () => Array(cols).fill(0));
+            minegrid = Array.from({ length: rows }, () => Array(cols).fill(0));
+            revealed = Array.from({ length: rows }, () => Array(cols).fill(false));
+            flagged = Array.from({ length: rows }, () => Array(cols).fill(false));
+            totalRevealed = 0;
+
+            let placed = 0;
+            while (placed < mines) {
+                let r = Math.floor(Math.random() * rows);
+                let c = Math.floor(Math.random() * cols);
+                if (grid[r][c] === 0) {
+                    grid[r][c] = -1;
+                    minegrid[r][c] = primes[Math.floor(Math.random() * 4)];
+                    placed++;
+                }
+            }
+
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (grid[r][c] === -1) continue;
+                    let count = 0;
+                    for (let dr = -1; dr <= 1; dr++) {
+                        for (let dc = -1; dc <= 1; dc++) {
+                            let nr = r + dr, nc = c + dc;
+                            if (nr >= 0 && nr < rows && nc >= 0 && nc < cols && grid[nr][nc] === -1) {
+                                count+=minegrid[nr][nc];
+                            }
+                        }
+                    }
+                    grid[r][c] = count;
+                }
+            }
+            draw();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    ctx.strokeRect(c * cellSize, r * cellSize, cellSize, cellSize);
+
+                    if (revealed[r][c] && grid[r][c] === -1) {
+                        ctx.fillStyle = "red";
+                        ctx.beginPath();
+                        ctx.arc(c * cellSize + cellSize / 2, r * cellSize + cellSize / 2, cellSize / 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    } else if (revealed[r][c]) {
+                        ctx.fillStyle = "#e5c1a2";
+                        ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+                        if (grid[r][c] > 0) {
+                            ctx.fillStyle = "black";
+                            ctx.font = "20px Arial";
+                            if(grid[r][c]/10>=1){
+                                ctx.fillText(grid[r][c], c * cellSize + 10, r * cellSize + 25);
+                            } else{
+                                ctx.fillText(grid[r][c], c * cellSize + 15, r * cellSize + 25);
+                            }
+                        }
+                    } else if (flagged[r][c]) {
+                        ctx.fillStyle = "blue";
+                        ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+                    }
+                }
+            }
+        }
+
+        function reveal(r, c) {
+            if (r < 0 || r >= rows || c < 0 || c >= cols || revealed[r][c] || flagged[r][c]) return;
+            revealed[r][c] = true;
+            totalRevealed++;
+
+            if (grid[r][c] === -1) {
+                revealAllMines();
+                setTimeout(() => {
+                    alert("Game Over!");
+                    initGame();
+                }, 100);
+                return;
+            }
+
+            if (grid[r][c] === 0) {
+                for (let dr = -1; dr <= 1; dr++) {
+                    for (let dc = -1; dc <= 1; dc++) {
+                        reveal(r + dr, c + dc);
+                    }
+                }
+            }
+
+            if (checkWin()) {
+                setTimeout(() => {
+                    alert("Congratulations!");
+                    initGame();
+                }, 100);
+            }
+
+            draw();
+        }
+
+        function revealAllMines() {
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (grid[r][c] === -1) {
+                        revealed[r][c] = true;
+                    }
+                }
+            }
+            draw();
+        }
+
+        function checkWin() {
+            let safeCells = 0;
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (grid[r][c] !== -1 && revealed[r][c]) {
+                        safeCells++;
+                    }
+                }
+            }
+            // 모든 지뢰를 제외한 칸이 열렸으면 승리
+            return safeCells === (rows * cols - mines);
+        }
+
+        canvas.addEventListener("click", (e) => {
+            let x = Math.floor(e.offsetX / cellSize);
+            let y = Math.floor(e.offsetY / cellSize);
+            reveal(y, x);
+        });
+
+        canvas.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            let x = Math.floor(e.offsetX / cellSize);
+            let y = Math.floor(e.offsetY / cellSize);
+            if (!revealed[y][x]) {
+                flagged[y][x] = !flagged[y][x];
+                draw();
+            }
+        });
+
+        initGame();
+    </script>
+</body>
+
+</html>
