@@ -53,7 +53,7 @@
             grid = Array.from({ length: rows }, () => Array(cols).fill(0));
             minegrid = Array.from({ length: rows }, () => Array(cols).fill(0));
             revealed = Array.from({ length: rows }, () => Array(cols).fill(false));
-            flagged = Array.from({ length: rows }, () => Array(cols).fill(false));
+            flagged = Array.from({ length: rows }, () => Array(cols).fill(0));
             totalRevealed = 0;
 
             let placed = 0;
@@ -108,9 +108,30 @@
                                 ctx.fillText(grid[r][c], c * cellSize + 15, r * cellSize + 25);
                             }
                         }
-                    } else if (flagged[r][c]) {
+                    } else if (flagged[r][c]===1) {
                         ctx.fillStyle = "blue";
                         ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+                        ctx.fillStyle = "black";
+                        ctx.font = "20px Arial";
+                        ctx.fillText(primes[flagged[r][c]-1], c * cellSize + 15, r * cellSize + 25);
+                    }else if (flagged[r][c]===2) {
+                        ctx.fillStyle = "yellow";
+                        ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+                        ctx.fillStyle = "black";
+                        ctx.font = "20px Arial";
+                        ctx.fillText(primes[flagged[r][c]-1], c * cellSize + 15, r * cellSize + 25);
+                    }else if (flagged[r][c]===3) {
+                        ctx.fillStyle = "violet";
+                        ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+                        ctx.fillStyle = "black";
+                        ctx.font = "20px Arial";
+                        ctx.fillText(primes[flagged[r][c]-1], c * cellSize + 15, r * cellSize + 25);
+                    }else if (flagged[r][c]===4) {
+                        ctx.fillStyle = "orange";
+                        ctx.fillRect(c * cellSize, r * cellSize, cellSize, cellSize);
+                        ctx.fillStyle = "black";
+                        ctx.font = "20px Arial";
+                        ctx.fillText(primes[flagged[r][c]-1], c * cellSize + 15, r * cellSize + 25);
                     }
                 }
             }
@@ -183,7 +204,11 @@
             let x = Math.floor(e.offsetX / cellSize);
             let y = Math.floor(e.offsetY / cellSize);
             if (!revealed[y][x]) {
-                flagged[y][x] = !flagged[y][x];
+                if(flagged[y][x]===4){
+                    flagged[y][x] = 0;
+                }else{
+                    flagged[y][x]++;
+                }
                 draw();
             }
         });
