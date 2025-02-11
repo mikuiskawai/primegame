@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>소수 공룡 게임</title>
+    <style>
+        body {
+            text-align: center;
+            background-color: #000000;
+            font-family: Arial, sans-serif;
+            color: white;
+        }
+
+        canvas {
+            top: 100px;
+            background: #000000;
+            display: block;
+            margin: 20px auto;
+        }
+
+        #logo {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            cursor: pointer;
+        }
+
+        #restartButton {
+            display: none;
+            position: absolute;
+            top: 48%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+            padding: 15px 30px;
+            background-color: black;
+            color: white;
+            border: 3px solid white;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        #restartButton:hover {
+            background-color: white;
+            color: black;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>소수 공룡 게임</h1>
+    <div id="logo">
+        <img src="./소수교 로고.png" alt="logo" width="60" height="60" onclick="location.reload()">
+    </div>
+    <!--<p style="font-size: 20px;">소수 장애물은 통과하며 점수 추가, 비소수는 점프(스페이스바)로 회피!</p>-->
+    <canvas id="gameCanvas" width="800" height="300"></canvas>
+    <button id="restartButton" style="display: none; font-size: 20px;">Try again!</button>
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+
+        let dino = { x: 50, y: 250, width: 30, height: 30, dy: 0, gravity: 0.6, jumpPower: -10, onGround: true };
+        let obstacles = [];
+        let speed = 5;
+        let score = 0;
+        let gameOver = false;
+        let frameCount = 0;
+        const minObstacleGap = 250;
+
+        function isPrime(num) {
+            if (num < 2) return false;
+            for (let i = 2; i <= Math.sqrt(num); i++) {
+                if (num % i === 0) return false;
+            }
+            return true;
+        }
+
+        function spawnObstacle() {
+            let value = Math.floor(Math.random() * 50) + 1;
+            if (obstacles.length === 0 || (canvas.width - obstacles[obstacles.length - 1].x) > minObstacleGap) {
+                obstacles.push({ x: canvas.width, y: 250, width: 30, height: 30, value });
+            }
+        }
+
+        function getClosestObstacle() {
+            return obstacles.filter(ob => ob.x > dino.x).sort((a, b) => a.x - b.x)[0];
+        }
+
+        function update() {
+            if (gameOver) return;
+            frameCount++;
+            speed = 5 + 0.2 * Math.floor(frameCount / 600);
+
+            dino.dy += dino.gravity;
+            dino.y += dino.dy;
+            if (dino.y >= 250) { dino.y = 250; dino.onGround = true; dino.dy = 0; }
+
+            obstacles.forEach(ob => ob.x -= speed);
+            obstacles = obstacles.filter(ob => {
+                if (ob.x + ob.width <= 0) return false;
+                if (ob.x < dino.x + dino.width && ob.x + ob.width > dino.x && ob.y < dino.y + dino.height && ob.y + ob.height > dino.y) {
+                    if (isPrime(ob.value)) {
+                        score += ob.value;
+                        return false;
+                    } else {
+                        gameOver = true;
+                    }
+                }
+                return true;
+            });
+
+            if (Math.random() < 0.05) spawnObstacle();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "white";
+            ctx.fillRect(dino.x, dino.y, dino.width, dino.height);
+            ctx.font = "20px Arial";
+            ctx.fillText(`score: ${score}`, 10, 30);
+            ctx.fillStyle = "#555";
+            ctx.fillRect(0, 280, canvas.width, 5);
+
+            let closestObstacle = getClosestObstacle();
+            if (closestObstacle) {
+                ctx.font = "30px Arial";
+                ctx.fillStyle = "white";
+                ctx.fillText(closestObstacle.value, canvas.width / 2 - 20, 60);
+            }
+
+            obstacles.forEach(ob => {
+                ctx.fillStyle = isPrime(ob.value) ? "green" : "green";
+                ctx.fillRect(ob.x, ob.y, ob.width, ob.height);
+                ctx.font = "20px Arial";
+                ctx.fillStyle = "black";
+                if (ob.value / 10 >= 1) {
+                    ctx.fillText(ob.value, ob.x + 4, ob.y + 23);
+                } else {
+                    ctx.fillText(ob.value, ob.x + 10, ob.y + 23);
+                }
+            });
+
+            if (gameOver) {
+                ctx.fillStyle = "red";
+                ctx.font = "40px Arial";
+                ctx.fillText("Game Over!", canvas.width / 2 - 110, canvas.height / 2);
+                ctx.fillStyle = "white";
+                ctx.font = "30px Arial";
+                ctx.fillText(`score: ${score}`, canvas.width / 2 - 56, canvas.height / 2 + 40);
+                document.getElementById("restartButton").style.display = "block";
+            }
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        document.getElementById("restartButton").addEventListener("click", () => {
+            window.location.reload();  
+        });
+
+        window.addEventListener("keydown", e => {
+            if (e.key === " " && dino.onGround) {
+                dino.dy = dino.jumpPower;
+                dino.onGround = false;
+            }
+        });
+        window.addEventListener("click", (e) => {
+            if (dino.onGround) {
+                dino.dy = dino.jumpPower;
+                dino.onGround = false;
+            }
+        });
+
+        gameLoop();
+    </script>
+</body>
+
+</html>
